@@ -9,6 +9,100 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Background Music - Put your audio file as "birthday-song.mp3" in same folder -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="./birthday-song.mp3" type="audio/mpeg">
+  </audio>
+  
+  <script>
+    // Global music controller
+    window.bgMusicController = {
+      music: null,
+      isUserInteracted: false,
+      
+      init: function() {
+        this.music = document.getElementById('bgMusic');
+        this.music.volume = 0.5; // 50% volume
+      },
+      
+      play: function() {
+        if (this.music && this.isUserInteracted) {
+          this.music.play().catch(e => console.log('Audio play prevented'));
+        }
+      },
+      
+      pause: function() {
+        if (this.music) {
+          this.music.pause();
+        }
+      },
+      
+      startOnInteraction: function() {
+        if (!this.isUserInteracted) {
+          this.isUserInteracted = true;
+          this.play();
+        }
+      }
+    };
+    
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      window.bgMusicController.init();
+      
+      // Start music on first user interaction (required by browsers)
+      document.addEventListener('click', function() {
+        window.bgMusicController.startOnInteraction();
+      }, { once: false });
+      
+      document.addEventListener('touchstart', function() {
+        window.bgMusicController.startOnInteraction();
+      }, { once: false });
+    });
+    
+    // Setup video observers after React renders
+    function setupVideoObservers() {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(video => {
+        // When video starts playing - pause background music
+        video.addEventListener('play', function() {
+          window.bgMusicController.pause();
+        });
+        
+        // When video is paused - resume background music
+        video.addEventListener('pause', function() {
+          window.bgMusicController.play();
+        });
+        
+        // When video ends - resume background music
+        video.addEventListener('ended', function() {
+          window.bgMusicController.play();
+        });
+      });
+    }
+    
+    // Check for videos periodically (since React renders them dynamically)
+    setInterval(function() {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(video => {
+        if (!video.hasAttribute('data-music-setup')) {
+          video.setAttribute('data-music-setup', 'true');
+          
+          video.addEventListener('play', function() {
+            window.bgMusicController.pause();
+          });
+          
+          video.addEventListener('pause', function() {
+            window.bgMusicController.play();
+          });
+          
+          video.addEventListener('ended', function() {
+            window.bgMusicController.play();
+          });
+        }
+      });
+    }, 1000);
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
